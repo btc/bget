@@ -1,0 +1,5 @@
+testdata
+*.pprof
+coverage.out
+bget
+bget.test

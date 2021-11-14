@@ -1,0 +1,74 @@
+1. accept the filename
+2. delegate to workers
+3. each worker writes the chunk to a mutex-protected data structure
+4. a goroutine monitors the status of the data structure to see if it's done
+5. if it's done, abort the workers.
+
+Q: how do we know the file size? when is this discovered?
+    Q: is it valid to check the Content-Length header?
+
+
+
+
+
+Download consists of...
+    urls
+    contentLength
+    ranges
+    chunkSize
+
+
+TODO
+====
+When there's no ETag, it's risky to merge downloads from multiple sources.
+    One amelioration would be to download each URL to a separate file and just
+    let the workers race. This wastes bandwidth but provides redundancy
+    against unresponsive servers.
+
+    Mad science: Write some code to try merging separate file downloads (by
+    inspecting completed offsets) and then if one of the file downloads has
+    an ETag, verify the hash. This has the merit of maintaining a simple
+    FileDownload primitive and extending with advanced functionality in a
+    compositional and orthogonal way.
+
+
+DONE
+====
+worker can put the range back in if it fails (with mu)
+worker can get a range from the download (with mu)
+putting a range back in the download should trigger another worker to try getting a range
+finishing a range and returning data should notify the coordinator to try assembling the file
+
+--------------------------------------------------------------------------------
+
+Q: What do the responses look like for each chunk of the file?
+TODO
+
+Q: how do we specify the chunk size?
+A: "Range" header
+
+Q: how do we specify the chunk we want?
+A: "Range" header
+
+Q: what's a good file for this? where can i find an appropriate file to download?
+A: 66MB https://nodejs.org/dist/v16.13.0/node-v16.13.0.tar.gz
+
+Q: how to store the list of incomplete ranges?
+A: Decided on two maps. This results in O(1) operations. One store
+    undownloaded offsets. The other stores "downloading" offsets.
+
+Q: Should i merge intervals?
+A: To get around this, we use a File which allows us to Seek and WriteAt.
+    Book-keeping is performed with two maps.
+
+Q: Can i discover the size of the entity without inspecting the content
+    length in a HEAD request?
+A: Sometimes. The Content-Range response header _sometimes_ includes the full content length.
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+
+Q: what if different URLs return different etag values?
+A: The resulting file will be corrupt.
+
+Q: can i depend on If-Match for all URLs?
+A: No. Counter-example: we discovered the Apache server serving Tails
+    doesn't provide an ETag.
