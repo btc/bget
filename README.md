@@ -26,3 +26,5 @@ The implementation is split into these parts:
 `file_download.go` is home to `FileDownload`, which encapsulates the shared state of the download, storing chunks and tracking the completion of ranges.
 
 `main_test.go` contains a variety of tests. Some tests are exploratory: probing various file servers to reveal how responses can differ across implementations in the wild. These ones hit the network. Other tests are unit tests intended to mitigate risk.
+
+`notes.txt` contains some notes I took during the process of learning the domain.
