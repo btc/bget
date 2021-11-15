@@ -4,9 +4,6 @@
 4. a goroutine monitors the status of the data structure to see if it's done
 5. if it's done, abort the workers.
 
-Q: how do we know the file size? when is this discovered?
-    Q: is it valid to check the Content-Length header?
-
 
 
 
@@ -72,3 +69,13 @@ A: The resulting file will be corrupt.
 Q: can i depend on If-Match for all URLs?
 A: No. Counter-example: we discovered the Apache server serving Tails
     doesn't provide an ETag.
+    
+Q: how do we know the file size? when is this discovered?
+A: Can performa HEAD request upfront.
+
+Q: is it valid to check the Content-Length header?
+A: Let's assume so. It's possible the prompt forbids this.
+    In that case, one amelioration would be to read the Content-Range response header.
+    Sometimes the full content length is provided there, but not always.
+
+
