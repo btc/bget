@@ -23,7 +23,7 @@ func main() {
 func run() error {
 
 	url := flag.String("url", "https://nodejs.org/dist/v16.13.0/node-v16.13.0.tar.gz", "a URL to download")
-	numWorkers := flag.Int("workers", 10, "number of workers")
+	numWorkers := flag.Int("n", 20, "number of workers")
 	flag.Parse()
 
 	fmt.Println("url: ", *url)

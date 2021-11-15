@@ -108,6 +108,11 @@ func filenameFromURL(url string) string {
 
 var ErrIsWeakETag = errors.New("weak etag not supported")
 
+// TODO(btc): haven't gotten this working yet. i don't yet have a grasp of how
+// to detect the hash function used to derive a particular etag. there appear
+// to be a few known formats, but I haven't invested the time to identify,
+// document, and implement. with love and understanding, the code in the
+// function body is trash afaic.
 func verifyETag(etag string, f func() io.Reader) error {
 
 	if strings.HasPrefix(etag, "W/") {

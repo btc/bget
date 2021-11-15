@@ -1,5 +1,5 @@
 run: bget
-	./bget
+	time ./bget
 
 test:
 	go test ./...

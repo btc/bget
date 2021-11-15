@@ -1,22 +1,17 @@
 To run this:
-
-1. Clone this repo.
-1. `make run`
-
 ```
-git clone git@github.com:btc/bget.git
+go install github.com/btc/bget
+bget
 ```
 
+To specify the number of chunks to download in parallel:
 ```
-make run
+bget -n 1000
 ```
 
-NB: Under the hood, make run is just:
+To override the URL:
 ```
-run: bget
-    ./bget
-bget:
-    go build .
+bget -url MY_URL
 ```
 -----
 
