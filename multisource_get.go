@@ -36,6 +36,8 @@ func MultiSourceGet(url string, numWorkers int, checkETag bool) (string, string,
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	const chunkSizeBytes = 256 * 1000
+
 	dl, err := NewFileDownload(contentLength, chunkSizeBytes)
 	if err != nil {
 		return "", "", err
@@ -64,11 +66,7 @@ func MultiSourceGet(url string, numWorkers int, checkETag bool) (string, string,
 		break
 	}
 	if checkETag && etag != "" {
-		f := func() io.Reader {
-			dl.temp.Seek(0, io.SeekStart)
-			return dl.temp
-		}
-		if err := verifyETag(etag, f); err != nil {
+		if err := verifyETag(etag, dl.Reader); err != nil {
 			return "", "", err
 		}
 	}

@@ -67,6 +67,9 @@ func TestAndExploreHTTPPartialRequests(t *testing.T) {
 			req, err := newRangeRequest(ctx, testCase.URL, etag, 256, 0)
 			require.NoError(t, err)
 
+			if resourceHasETag {
+				require.Equal(t, testCase.ETag, req.Header.Get("If-Match"))
+			}
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
 

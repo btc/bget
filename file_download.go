@@ -9,9 +9,9 @@ import (
 	"sync"
 )
 
-const chunkSizeBytes = 256 * 1000
-
 type FileDownload struct {
+	chunkSizeBytes int64
+
 	mu           sync.Mutex
 	temp         *os.File
 	undownloaded map[int64]struct{}
@@ -32,10 +32,11 @@ func NewFileDownload(sizeBytes int64, chunkSizeBytes int64) (*FileDownload, erro
 	}
 
 	return &FileDownload{
-		temp:         f,
-		undownloaded: undownloaded,
-		downloading:  make(map[int64]struct{}),
-		updated:      make(chan struct{}, 1), // necessary?
+		chunkSizeBytes: chunkSizeBytes,
+		temp:           f,
+		undownloaded:   undownloaded,
+		downloading:    make(map[int64]struct{}),
+		updated:        make(chan struct{}, 1),
 	}, nil
 }
 
@@ -70,7 +71,7 @@ func (f *FileDownload) IsComplete() bool {
 }
 
 func (f *FileDownload) ChunkSize() int64 {
-	return chunkSizeBytes
+	return f.chunkSizeBytes
 }
 
 func (f *FileDownload) ReturnUndownloadedRange(offset int64) {
@@ -132,6 +133,12 @@ func (f *FileDownload) Filename() string {
 
 func (f *FileDownload) Updated() <-chan struct{} {
 	return f.updated
+}
+
+// NB: not thread-safe
+func (f *FileDownload) Reader() io.Reader {
+	f.temp.Seek(0, io.SeekStart)
+	return f.temp
 }
 
 func (f *FileDownload) Bytes() ([]byte, error) {
