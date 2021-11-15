@@ -1,19 +1,10 @@
+Plan
+====
 1. accept the filename
 2. delegate to workers
 3. each worker writes the chunk to a mutex-protected data structure
 4. a goroutine monitors the status of the data structure to see if it's done
 5. if it's done, abort the workers.
-
-
-
-
-
-Download consists of...
-    urls
-    contentLength
-    ranges
-    chunkSize
-
 
 TODO
 ====
