@@ -69,7 +69,7 @@ func (f *FileDownload) IsComplete() bool {
 	return len(f.undownloaded) == 0 && len(f.downloading) == 0
 }
 
-func (f *FileDownload) ChunkSize() int {
+func (f *FileDownload) ChunkSize() int64 {
 	return chunkSizeBytes
 }
 
