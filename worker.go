@@ -9,6 +9,36 @@ import (
 	"time"
 )
 
+// Is deadlock possible?
+//
+// Proof of Liveness:
+//
+// Premise: Suppose [1] all workers are sleeping in this select
+// block AND [2] the download is not complete.
+//
+// [3] Then, if the download is not complete, there exist
+// ranges that are either undownloaded or downloading.
+//
+// [4] Since all workers are here, then there are no
+// undownloaded ranges. i.e. None were 'found'.
+//
+// [5] Then, there must be at least one 'downloading' range.
+//
+// [6] If there is a 'downloading' range, then there must
+// be a worker who owns that offset and hasn't returned it.
+//
+// [7] But if all workers are here, then no workers are holding
+// offsets. So, no ranges are downloading.
+// (assuming downloadRange respects its public contract)
+//
+// [8] So, no ranges are 'undownloaded' (4) and no ranges are
+// 'downloading' (7). This contradicts the premise (2) that
+// the download is not complete.
+//
+// To the contrary, these statements demonstrate that if all
+// workers are sleeping in this block, then the download must
+// be complete.
+
 // NB: can play with this value to force retries. from btc's location, values under 200ms do the trick.
 const requestTimeout = time.Second * 500
 
@@ -24,35 +54,6 @@ func RunWorker(ctx context.Context, f *FileDownload, url, etag string) error {
 		default:
 			offset, found := f.TakeUndownloadedRange()
 			if !found {
-				// Is deadlock possible?
-				//
-				// Proof of Liveness:
-				//
-				// Premise: Suppose [1] all workers are sleeping in this select
-				// block AND [2] the download is not complete.
-				//
-				// [3] Then, if the download is not complete, there exist
-				// ranges that are either undownloaded or downloading.
-				//
-				// [4] Since all workers are here, then there are no
-				// undownloaded ranges. i.e. None were 'found'.
-				//
-				// [5] Then, there must be at least one 'downloading' range.
-				//
-				// [6] If there is a 'downloading' range, then there must
-				// be a worker who owns that offset and hasn't returned it.
-				//
-				// [7] But if all workers are here, then no workers are holding
-				// offsets. So, no ranges are downloading.
-				// (assuming downloadRange respects its public contract)
-				//
-				// [8] So, no ranges are 'undownloaded' (4) and no ranges are
-				// 'downloading' (7). This contradicts the premise (2) that
-				// the download is not complete.
-				//
-				// To the contrary, these statements demonstrate that if all
-				// workers are sleeping in this block, then the download must
-				// be complete.
 				select {
 				case <-ctx.Done():
 					return nil
@@ -60,12 +61,14 @@ func RunWorker(ctx context.Context, f *FileDownload, url, etag string) error {
 					continue
 				}
 			}
-			ctx, _ := context.WithTimeout(ctx, requestTimeout)
+			ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 			err := downloadRange(ctx, f, url, etag, offset)
 			if err != nil {
+				cancel()
 				log.Println(err)
 				continue
 			}
+			cancel()
 		}
 	}
 }
